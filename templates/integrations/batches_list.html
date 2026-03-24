@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Пакеты обмена{% endblock %}
+{% block content %}
+<h1>Пакеты обмена</h1>
+<table>
+    <thead>
+        <tr><th>Код</th><th>Направление</th><th>Профиль</th><th>Статус</th><th>Заказов</th><th>Создан</th></tr>
+    </thead>
+    <tbody>
+    {% for batch in batches %}
+        <tr>
+            <td><a href="{% url 'integrations:batch-detail' batch.pk %}">{{ batch.code }}</a></td>
+            <td>{{ batch.get_direction_display }}</td>
+            <td>{{ batch.profile|default:'—' }}</td>
+            <td>{{ batch.get_status_display }}</td>
+            <td>{{ batch.orders_count }}</td>
+            <td>{{ batch.created_at }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6">Пакетов пока нет.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

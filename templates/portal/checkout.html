@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load portal_extras %}
+{% block title %}Оформление заказа{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>Оформление заказа</h1>
+    <div class="muted" style="margin-bottom:18px;">После создания заказ попадет в список заявок и может быть выгружен обратно в учетную систему.</div>
+    <div class="sidebar-layout" style="grid-template-columns:1.1fr .9fr;">
+        <div>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Подтвердить заказ</button>
+            </form>
+        </div>
+        <div class="card" style="background:#f8fafc;">
+            <h3>Состав заказа</h3>
+            <table>
+                {% for line in cart_lines %}
+                    <tr><td>{{ line.product.code }}</td><td>{{ line.qty }}</td><td>{{ line.line_total|money }}</td></tr>
+                {% endfor %}
+            </table>
+            <div class="between" style="margin-top:14px;">
+                <strong>Итого</strong><strong>{{ cart_total|money }} ₽</strong>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

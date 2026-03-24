@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Импорт статусов{% endblock %}
+{% block content %}
+<h1>Импорт статусов ERP</h1>
+<ul>
+{% for batch in batches %}
+    <li><a href="{% url 'integrations:batch-detail' batch.pk %}">{{ batch.code }}</a> — {{ batch.file_path }} — {{ batch.get_status_display }}</li>
+{% empty %}
+    <li>Загрузок статусов пока не было.</li>
+{% endfor %}
+</ul>
+{% endblock %}

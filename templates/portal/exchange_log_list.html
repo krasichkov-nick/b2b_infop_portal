@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Логи обмена{% endblock %}
+{% block content %}
+<div class="between" style="margin-bottom:20px;">
+    <h1 style="margin:0;">Логи обмена</h1>
+    <a class="button secondary" href="{% url 'portal:integration-dashboard' %}">Назад</a>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+    <form method="get" class="filters">
+        <div>
+            <label for="direction">Направление</label>
+            <select name="direction" id="direction">
+                <option value="">Все</option>
+                <option value="import" {% if direction_filter == "import" %}selected{% endif %}>Импорт</option>
+                <option value="export" {% if direction_filter == "export" %}selected{% endif %}>Экспорт</option>
+                <option value="status" {% if direction_filter == "status" %}selected{% endif %}>Статусы</option>
+                <option value="system" {% if direction_filter == "system" %}selected{% endif %}>Система</option>
+            </select>
+        </div>
+        <div>
+            <label for="status">Статус</label>
+            <select name="status" id="status">
+                <option value="">Все</option>
+                <option value="ok" {% if status_filter == "ok" %}selected{% endif %}>Успешно</option>
+                <option value="warning" {% if status_filter == "warning" %}selected{% endif %}>Предупреждение</option>
+                <option value="error" {% if status_filter == "error" %}selected{% endif %}>Ошибка</option>
+            </select>
+        </div>
+        <div style="align-self:end;">
+            <button type="submit">Применить</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Профиль</th>
+                <th>Направление</th>
+                <th>Статус</th>
+                <th>Файл</th>
+                <th>Сообщение</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for log in logs %}
+            <tr>
+                <td>{{ log.created_at|date:"d.m.Y H:i" }}</td>
+                <td>{{ log.profile|default:"—" }}</td>
+                <td>{{ log.get_direction_display }}</td>
+                <td><span class="pill">{{ log.get_status_display }}</span></td>
+                <td>{{ log.file_name|default:"—" }}</td>
+                <td>{{ log.message }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6" class="muted">По выбранным фильтрам ничего нет.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

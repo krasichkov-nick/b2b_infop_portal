@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load portal_extras %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="sidebar-layout" style="grid-template-columns:minmax(320px, 420px) 1fr;">
+        <div>
+            {% if product.image_main %}
+                <img class="product-image" src="{% url 'portal:product-image-main' product.id %}" alt="{{ product.name }}">
+            {% else %}
+                <img class="product-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23f8fafc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='%2394a3b8'%3EНет фото%3C/text%3E%3C/svg%3E" alt="Нет фото">
+            {% endif %}
+            {% if product.images.all %}
+            <div class="row" style="margin-top:12px; flex-wrap:wrap;">
+                {% for image in product.images.all %}
+                    <img src="{% url 'portal:product-image' product.id image.id %}" alt="{{ product.name }}" style="width:88px; height:88px; object-fit:contain; border:1px solid #d9e1ea; border-radius:10px; background:#fff;">
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        <div>
+            <div class="muted">Код: {{ product.code }}{% if product.barcode %} · Штрихкод: {{ product.barcode }}{% endif %}</div>
+            <h1>{{ product.name }}</h1>
+            <div class="row" style="margin-bottom:14px;">
+                <span class="pill">{{ product.category.name|default:'Без категории' }}</span>
+                {% if product.brand %}<span class="pill">{{ product.brand.name }}</span>{% endif %}
+                <span class="pill">Остаток: {{ product.stock_total }}</span>
+            </div>
+            {% if request.user.is_authenticated %}
+                <div style="font-size:30px; font-weight:700; margin-bottom:12px;">{% if current_price %}{{ current_price|money }} ₽{% else %}Цена не задана{% endif %}</div>
+                <form method="post" action="{% url 'portal:cart-add' product.slug %}" class="row">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <div style="width:160px;">{{ form.qty }}</div>
+                    <button type="submit">Добавить в корзину</button>
+                </form>
+                <div class="muted" style="margin-top:10px;">Мин. заказ: {{ product.min_order_qty }} · Кратность: {{ product.multiplicity }}</div>
+            {% else %}
+                <div class="card" style="background:#f8fafc;">Войдите в систему, чтобы видеть цены и заказывать товар.</div>
+            {% endif %}
+            {% if product.description %}
+                <h3 style="margin-top:22px;">Описание</h3>
+                <div>{{ product.description|linebreaks }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

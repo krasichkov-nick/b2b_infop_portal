@@ -1,0 +1,95 @@
+{% load portal_extras %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}B2B портал{% endblock %}</title>
+    <style>
+        :root {
+            --bg:#f4f7fb; --card:#ffffff; --line:#d9e1ea; --text:#15202b; --muted:#5b6b7b; --accent:#155eef; --ok:#067647; --warn:#b54708;
+        }
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:Arial, sans-serif; background:var(--bg); color:var(--text); }
+        a { color:var(--accent); text-decoration:none; }
+        .container { max-width:1280px; margin:0 auto; padding:24px; }
+        .topbar { background:#0f172a; color:#fff; }
+        .topbar .container { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+        .nav { display:flex; gap:16px; flex-wrap:wrap; }
+        .nav a { color:#fff; opacity:.92; }
+        .brand { font-weight:700; font-size:20px; }
+        .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px; box-shadow:0 8px 24px rgba(15,23,42,.05); }
+        .grid { display:grid; gap:20px; }
+        .grid.products { grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); }
+        .grid.stats { grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+        .product-card img, .product-image { width:100%; height:220px; object-fit:contain; background:#fff; border:1px solid var(--line); border-radius:12px; }
+        .button, button, input[type=submit] { background:var(--accent); color:#fff; border:none; border-radius:12px; padding:10px 16px; cursor:pointer; font-weight:600; }
+        .button.secondary { background:#fff; color:var(--text); border:1px solid var(--line); }
+        .button.warn { background:#fff7ed; color:#9a3412; border:1px solid #fdba74; }
+        form.inline { display:inline-flex; gap:8px; align-items:center; }
+        input, select, textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+        .filters { display:grid; gap:12px; grid-template-columns:2fr 1fr 1fr 1fr auto; align-items:end; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { padding:12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+        .muted { color:var(--muted); }
+        .messages { display:grid; gap:10px; margin-bottom:16px; }
+        .message { padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:#fff; }
+        .message.success { border-color:#abefc6; background:#ecfdf3; }
+        .message.error { border-color:#fecdca; background:#fef3f2; }
+        .message.warning { border-color:#fedf89; background:#fffaeb; }
+        .message.info { border-color:#b2ddff; background:#eff8ff; }
+        .kpi { font-size:30px; font-weight:700; }
+        .row { display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+        .between { display:flex; justify-content:space-between; gap:16px; align-items:center; }
+        .pill { padding:4px 10px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:12px; display:inline-block; }
+        .status-new { background:#eff8ff; color:#175cd3; }
+        .status-processing { background:#fffaeb; color:#b54708; }
+        .status-approved { background:#ecfdf3; color:#067647; }
+        .status-exported { background:#f9f5ff; color:#6941c6; }
+        .status-invoiced { background:#eef4ff; color:#1849a9; }
+        .status-shipped { background:#ecfdf3; color:#027a48; }
+        .status-completed { background:#f0fdf4; color:#166534; }
+        .status-cancelled { background:#fef3f2; color:#b42318; }
+        .timeline { display:grid; gap:12px; }
+        .timeline-item { padding:14px; border:1px solid var(--line); border-radius:14px; background:#fff; }
+        .pagination { display:flex; gap:8px; justify-content:center; margin-top:20px; }
+        .sidebar-layout { display:grid; gap:20px; grid-template-columns:280px 1fr; }
+        @media (max-width: 960px) {
+            .sidebar-layout { grid-template-columns:1fr; }
+            .filters { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="container">
+            <div class="brand"><a href="{% url 'portal:catalog' %}" style="color:#fff;">B2B портал</a></div>
+            <nav class="nav">
+                <a href="{% url 'portal:catalog' %}">Каталог</a>
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'portal:dashboard' %}">Кабинет</a>
+                    <a href="{% url 'portal:order-list' %}">Заказы</a>
+                    <a href="{% url 'portal:upload-order' %}">Загрузка заказа</a>
+                    <a href="{% url 'portal:cart' %}">Корзина ({{ portal_cart_count }})</a>
+                    {% if request.user.is_staff %}
+                        <a href="{% url 'portal:integration-dashboard' %}">Интеграция</a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}">Выход</a>
+                {% else %}
+                    <a href="{% url 'login' %}">Войти</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+    <main class="container">
+        {% if messages %}
+            <div class="messages">
+            {% for message in messages %}
+                <div class="message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

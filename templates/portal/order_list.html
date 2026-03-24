@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Заказы{% endblock %}
+{% block content %}
+<div class="between" style="margin-bottom:20px;">
+    <h1 style="margin:0;">Мои заказы</h1>
+    <a class="button secondary" href="{% url 'portal:catalog' %}">Каталог</a>
+</div>
+<div class="card">
+    {% if orders %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер сайта</th>
+                    <th>Номер ERP</th>
+                    <th>Статус</th>
+                    <th>Сумма</th>
+                    <th>Создан</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td><a href="{% url 'portal:order-detail' order.pk %}">{{ order.site_number }}</a></td>
+                    <td>{{ order.external_number|default:"—" }}</td>
+                    <td><span class="pill status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                    <td>{{ order.total }}</td>
+                    <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                    <td><a href="{% url 'portal:repeat-order' order.pk %}">Повторить</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="muted">Заказов нет.</p>
+    {% endif %}
+</div>
+{% endblock %}

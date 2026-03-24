@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Пакет {{ batch.code }}{% endblock %}
+{% block content %}
+<h1>Пакет {{ batch.code }}</h1>
+<p>Направление: <strong>{{ batch.get_direction_display }}</strong></p>
+<p>Статус: <strong>{{ batch.get_status_display }}</strong></p>
+<p>Комментарий: {{ batch.comment|default:'—' }}</p>
+<p>Файл: {{ batch.file_path|default:'—' }}</p>
+<p>Checksum: {{ batch.checksum|default:'—' }}</p>
+
+<h2>Артефакты</h2>
+<ul>
+    {% for artifact in batch.artifacts.all %}
+        <li>{{ artifact.kind }} — <a href="{% url 'integrations:artifact-download' artifact.pk %}">скачать</a></li>
+    {% empty %}
+        <li>Нет файлов.</li>
+    {% endfor %}
+</ul>
+
+<h2>Заказы</h2>
+<ul>
+    {% for order in batch.orders.all %}
+        <li>#{{ order.pk }} — {{ order.site_number }} — {{ order.external_uid }}</li>
+    {% empty %}
+        <li>Заказы не привязаны.</li>
+    {% endfor %}
+</ul>
+
+<h2>Логи</h2>
+<ul>
+    {% for log in logs %}
+        <li>{{ log.created_at }} — {{ log.get_status_display }} — {{ log.message }}</li>
+    {% empty %}
+        <li>Логов нет.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

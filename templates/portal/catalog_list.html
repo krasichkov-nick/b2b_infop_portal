@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load portal_extras %}
+{% block title %}Каталог{% endblock %}
+{% block content %}
+<div class="between" style="margin-bottom:18px;">
+    <div>
+        <h1>Каталог</h1>
+        <div class="muted">Поиск по коду, штрихкоду и названию. Цены доступны после входа.</div>
+    </div>
+</div>
+
+<div class="sidebar-layout">
+    <aside class="card">
+        <form method="get" class="grid" style="gap:14px;">
+            <div>
+                <label>Поиск</label>
+                <input type="text" name="q" value="{{ query }}" placeholder="Например, SKU-001 или крем">
+            </div>
+            <div>
+                <label>Категория</label>
+                <select name="category">
+                    <option value="">Все</option>
+                    {% for category in categories %}
+                        <option value="{{ category.slug }}" {% if selected_category == category.slug %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Бренд</label>
+                <select name="brand">
+                    <option value="">Все</option>
+                    {% for brand in brands %}
+                        <option value="{{ brand.slug }}" {% if selected_brand == brand.slug %}selected{% endif %}>{{ brand.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Наличие</label>
+                <select name="availability">
+                    <option value="">Любое</option>
+                    <option value="in_stock" {% if selected_availability == 'in_stock' %}selected{% endif %}>Только в наличии</option>
+                </select>
+            </div>
+            <div class="row">
+                <button type="submit">Применить</button>
+                <a class="button secondary" href="{% url 'portal:catalog' %}">Сбросить</a>
+            </div>
+        </form>
+    </aside>
+
+    <section>
+        <div class="grid products">
+            {% for product in products %}
+                <div class="card product-card">
+                    <a href="{% url 'portal:product-detail' product.slug %}">
+                        {% if product.image_main %}
+                            <img src="{% url 'portal:product-image-main' product.id %}" alt="{{ product.name }}">
+                        {% else %}
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23f8fafc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='%2394a3b8'%3EНет фото%3C/text%3E%3C/svg%3E" alt="Нет фото">
+                        {% endif %}
+                    </a>
+                    <div class="muted" style="margin-top:12px;">{{ product.code }}</div>
+                    <h3 style="margin:6px 0 8px; font-size:18px;"><a href="{% url 'portal:product-detail' product.slug %}">{{ product.name }}</a></h3>
+                    <div class="muted">{{ product.category.name|default:'Без категории' }}</div>
+                    <div style="margin-top:10px;">Остаток: <strong>{{ product.stock_total }}</strong></div>
+                    {% if request.user.is_authenticated %}
+                        <div style="margin-top:8px; font-size:20px; font-weight:700;">{% if product.prices.first %}от {{ product.prices.first.amount|money }}{% else %}Цена не задана{% endif %}</div>
+                    {% else %}
+                        <div style="margin-top:8px;" class="muted">Войдите, чтобы видеть цены</div>
+                    {% endif %}
+                    <div class="row" style="margin-top:14px;">
+                        <a class="button secondary" href="{% url 'portal:product-detail' product.slug %}">Карточка</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="card">Ничего не найдено.</div>
+            {% endfor %}
+        </div>
+        {% if is_paginated %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a class="button secondary" href="?{% query_transform page=page_obj.previous_page_number %}">Назад</a>
+                {% endif %}
+                <span class="pill">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a class="button secondary" href="?{% query_transform page=page_obj.next_page_number %}">Вперед</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

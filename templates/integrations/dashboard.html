@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Интеграция ERP{% endblock %}
+{% block content %}
+<h1>Интеграция ERP</h1>
+<p>Заказов ждут выгрузки: <strong>{{ pending_orders }}</strong></p>
+<p>Выгружены без статуса ERP: <strong>{{ exported_without_status }}</strong></p>
+<p><a href="{% url 'integrations:manual-actions' %}">Ручные действия</a> · <a href="{% url 'integrations:batches-list' %}">Пакеты обмена</a> · <a href="{% url 'integrations:status-imports' %}">Импорт статусов</a></p>
+
+<h2>Последние пакеты</h2>
+<ul>
+{% for batch in last_batches %}
+    <li><a href="{% url 'integrations:batch-detail' batch.pk %}">{{ batch.code }}</a> — {{ batch.get_direction_display }} — {{ batch.get_status_display }}</li>
+{% empty %}
+    <li>Пакетов нет.</li>
+{% endfor %}
+</ul>
+
+<h2>Последние ошибки</h2>
+<ul>
+{% for log in recent_errors %}
+    <li>{{ log.created_at }} — {{ log.message }}</li>
+{% empty %}
+    <li>Ошибок нет.</li>
+{% endfor %}
+</ul>
+{% endblock %}

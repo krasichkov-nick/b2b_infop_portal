@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load portal_extras %}
+{% block title %}Корзина{% endblock %}
+{% block content %}
+<div class="between" style="margin-bottom:20px;">
+    <div>
+        <h1>Корзина</h1>
+        <div class="muted">Проверьте кратность, минимальные партии и итоговую сумму перед оформлением.</div>
+    </div>
+    <div class="row">
+        <a class="button secondary" href="{% url 'portal:upload-order' %}">Загрузить из файла</a>
+        <a class="button secondary" href="{% url 'portal:cart-clear' %}">Очистить корзину</a>
+    </div>
+</div>
+
+<div class="card">
+    {% if cart_lines %}
+    <table>
+        <thead>
+            <tr><th>Товар</th><th>Количество</th><th>Цена</th><th>Сумма</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for line in cart_lines %}
+            <tr>
+                <td>
+                    <div><a href="{% url 'portal:product-detail' line.product.slug %}">{{ line.product.name }}</a></div>
+                    <div class="muted">{{ line.product.code }}</div>
+                </td>
+                <td>{{ line.qty }}</td>
+                <td>{{ line.price|money }}</td>
+                <td>{{ line.line_total|money }}</td>
+                <td><a href="{% url 'portal:cart-remove' line.product.code %}">Удалить</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="between" style="margin-top:18px;">
+        <div class="kpi">{{ cart_total|money }} ₽</div>
+        <div class="row">
+            <a class="button secondary" href="{% url 'portal:catalog' %}">Продолжить выбор</a>
+            <a class="button" href="{% url 'portal:checkout' %}">Оформить заказ</a>
+        </div>
+    </div>
+    {% else %}
+        <div class="muted">Корзина пустая.</div>
+    {% endif %}
+</div>
+{% endblock %}

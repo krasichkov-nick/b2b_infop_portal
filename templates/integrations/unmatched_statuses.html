@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Непривязанные статусы{% endblock %}
+{% block content %}
+<h1>Непривязанные / проблемные статусы</h1>
+<ul>
+{% for log in logs %}
+    <li>{{ log.created_at }} — {{ log.file_name }} — {{ log.message }}</li>
+{% empty %}
+    <li>Проблемных статусов нет.</li>
+{% endfor %}
+</ul>
+{% endblock %}

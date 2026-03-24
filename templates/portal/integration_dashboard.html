@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Интеграция{% endblock %}
+{% block content %}
+<div class="between" style="margin-bottom:20px;">
+    <div>
+        <h1 style="margin:0 0 8px;">Центр интеграции</h1>
+        <div class="muted">Мониторинг синхронизаций, очереди заказов и ошибок обмена.</div>
+    </div>
+    <a class="button secondary" href="{% url 'portal:exchange-log-list' %}">Все логи</a>
+</div>
+
+<div class="grid stats" style="margin-bottom:20px;">
+    <div class="card"><div class="muted">Заказы к выгрузке</div><div class="kpi">{{ pending_orders }}</div></div>
+    <div class="card"><div class="muted">Заказы в обработке</div><div class="kpi">{{ processing_orders }}</div></div>
+    <div class="card"><div class="muted">Профили обмена</div><div class="kpi">{{ profiles|length }}</div></div>
+    <div class="card"><div class="muted">Логи на экране</div><div class="kpi">{{ logs|length }}</div></div>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+    <h2 style="margin-top:0;">Профили интеграции</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Профиль</th>
+                <th>Код</th>
+                <th>Интервал</th>
+                <th>Последний успех</th>
+                <th>Последняя ошибка</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for profile in profiles %}
+            <tr>
+                <td>{{ profile.name }}</td>
+                <td>{{ profile.code }}</td>
+                <td>{{ profile.run_every_minutes }} мин</td>
+                <td>{{ profile.last_success_at|date:"d.m.Y H:i"|default:"—" }}</td>
+                <td>{{ profile.last_error|default:"—"|truncatechars:120 }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="5" class="muted">Профили интеграции не настроены.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2 style="margin-top:0;">Последние события обмена</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Профиль</th>
+                <th>Направление</th>
+                <th>Статус</th>
+                <th>Файл</th>
+                <th>Сообщение</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for log in logs %}
+            <tr>
+                <td>{{ log.created_at|date:"d.m.Y H:i" }}</td>
+                <td>{{ log.profile|default:"—" }}</td>
+                <td>{{ log.get_direction_display }}</td>
+                <td><span class="pill">{{ log.get_status_display }}</span></td>
+                <td>{{ log.file_name|default:"—" }}</td>
+                <td>{{ log.message }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="6" class="muted">Логи отсутствуют.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

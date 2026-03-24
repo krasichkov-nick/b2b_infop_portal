@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Личный кабинет{% endblock %}
+{% block content %}
+<div class="between" style="margin-bottom:20px;">
+    <div>
+        <h1 style="margin:0 0 8px;">Личный кабинет</h1>
+        {% if company %}
+            <div class="muted">{{ company.name }}{% if company.price_type %} · тип цены: {{ company.price_type.name }}{% endif %}</div>
+        {% else %}
+            <div class="muted">Пользователь не привязан к компании.</div>
+        {% endif %}
+    </div>
+    <div class="row">
+        <a class="button secondary" href="{% url 'portal:order-list' %}">Все заказы</a>
+        <a class="button" href="{% url 'portal:catalog' %}">Перейти в каталог</a>
+    </div>
+</div>
+
+<div class="grid stats" style="margin-bottom:20px;">
+    <div class="card"><div class="muted">Новые</div><div class="kpi">{{ new_count }}</div></div>
+    <div class="card"><div class="muted">В обработке</div><div class="kpi">{{ processing_count }}</div></div>
+    <div class="card"><div class="muted">Черновики</div><div class="kpi">{{ draft_count }}</div></div>
+    <div class="card"><div class="muted">Завершенные</div><div class="kpi">{{ completed_count }}</div></div>
+</div>
+
+<div class="card">
+    <div class="between">
+        <h2 style="margin:0;">Последние заказы</h2>
+        <a href="{% url 'portal:upload-order' %}">Загрузить заказ из файла</a>
+    </div>
+    {% if recent_orders %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер</th>
+                    <th>ERP</th>
+                    <th>Статус</th>
+                    <th>Сумма</th>
+                    <th>Дата</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for order in recent_orders %}
+                <tr>
+                    <td><a href="{% url 'portal:order-detail' order.pk %}">{{ order.site_number }}</a></td>
+                    <td>{{ order.external_number|default:"—" }}</td>
+                    <td><span class="pill status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                    <td>{{ order.total }}</td>
+                    <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="muted">Заказов пока нет.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Заказ {{ order.site_number }}{% endblock %}
+{% block content %}
+<h1>Заказ {{ order.site_number }}</h1>
+<p>Компания: <strong>{{ order.company.name }}</strong></p>
+<p>Статус: <strong>{{ order.get_status_display }}</strong></p>
+<p>Состояние выгрузки ERP: <strong>{{ order.get_erp_export_state_display }}</strong></p>
+<p>Внешний UID: <code>{{ order.external_uid }}</code></p>
+<p>Номер ERP: {{ order.external_number|default:'—' }}</p>
+<p>Статус ERP: {{ order.erp_status_label|default:'—' }}</p>
+<p>Последняя выгрузка: {{ order.exported_at|default:'—' }}</p>
+<p>Последняя ошибка ERP: {{ order.erp_sync_error|default:'—' }}</p>
+
+<h2>Строки заказа</h2>
+<table>
+    <thead><tr><th>Код</th><th>Наименование</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead>
+    <tbody>
+    {% for item in order.items.all %}
+        <tr>
+            <td>{{ item.product_code_snapshot }}</td>
+            <td>{{ item.product_name_snapshot }}</td>
+            <td>{{ item.qty }}</td>
+            <td>{{ item.price }}</td>
+            <td>{{ item.line_total }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h2>История статусов</h2>
+<ul>
+{% for event in order.status_events.all %}
+    <li>{{ event.created_at }} — {{ event.source }} — {{ event.new_status }}{% if event.comment %} — {{ event.comment }}{% endif %}</li>
+{% empty %}
+    <li>История статусов пуста.</li>
+{% endfor %}
+</ul>
+
+{% if order.can_repeat %}
+<p><a class="button" href="{% url 'portal:repeat-order' order.pk %}">Повторить заказ</a></p>
+{% endif %}
+{% endblock %}

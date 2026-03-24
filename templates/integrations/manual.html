@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Ручные действия{% endblock %}
+{% block content %}
+<h1>Ручные действия по ERP</h1>
+<h2>Экспорт заказов</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ export_form.as_p }}
+    <button type="submit" name="run_export">Выгрузить</button>
+</form>
+
+<h2>Импорт статусов</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ status_form.as_p }}
+    <button type="submit" name="run_status_import">Загрузить статусы</button>
+</form>
+{% endblock %}
