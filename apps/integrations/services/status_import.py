@@ -54,14 +54,45 @@ class OrderStatusImporter:
         if m:
             return m.internal_status, raw
         fallback = {
-            'new': 'new', 'новый': 'new',
-            'processing': 'processing', 'в обработке': 'processing',
-            'approved': 'approved', 'подтвержден': 'approved', 'подтверждён': 'approved',
-            'exported': 'exported', 'выгружен': 'exported',
-            'invoiced': 'invoiced', 'счет': 'invoiced', 'счёт': 'invoiced', 'выставлен счет': 'invoiced', 'выставлен счёт': 'invoiced',
-            'shipped': 'shipped', 'отгружен': 'shipped',
-            'completed': 'completed', 'завершен': 'completed', 'завершён': 'completed', 'закрыт': 'completed',
-            'cancelled': 'cancelled', 'отменен': 'cancelled', 'отменён': 'cancelled',
+            'new': 'new',
+            'новый': 'new',
+
+            'processing': 'processing',
+            'в обработке': 'processing',
+
+            'approved': 'approved',
+            'подтвержден': 'approved',
+            'подтверждён': 'approved',
+            'зарезервирован': 'approved',
+
+            'exported': 'exported',
+            'выгружен': 'exported',
+            'выгружен в erp': 'exported',
+
+            'invoiced': 'invoiced',
+            'счет': 'invoiced',
+            'счёт': 'invoiced',
+            'выставлен счет': 'invoiced',
+            'выставлен счёт': 'invoiced',
+            'выписан': 'invoiced',
+
+            'paid': 'paid',
+            'оплачен': 'paid',
+
+            'overdue': 'overdue',
+            'просрочен': 'overdue',
+
+            'shipped': 'shipped',
+            'отгружен': 'shipped',
+
+            'completed': 'completed',
+            'завершен': 'completed',
+            'завершён': 'completed',
+            'закрыт': 'completed',
+
+            'cancelled': 'cancelled',
+            'отменен': 'cancelled',
+            'отменён': 'cancelled',
         }
         return fallback.get(key, ''), raw
 
@@ -124,13 +155,13 @@ class OrderStatusImporter:
                 normalized = {str(k).strip().lower(): v for k, v in row.items()}
                 external_uid = (normalized.get('external_uid') or normalized.get('uid') or normalized.get('ид') or '').strip()
                 site_number = (normalized.get('site_number') or normalized.get('номер_сайта') or normalized.get('site') or '').strip()
-                external_number = (normalized.get('external_number') or normalized.get('номер_erp') or normalized.get('erp_number') or '').strip()
+                external_number = (normalized.get('external_number') or normalized.get('номер_erp') or normalized.get('erp_number') or normalized.get('erp_document_number') or '').strip()
                 key = self._latest_key(external_uid, site_number, external_number)
                 latest[key] = {
                     'external_uid': external_uid,
                     'site_number': site_number,
                     'external_number': external_number,
-                    'status': (normalized.get('status') or normalized.get('статус') or '').strip(),
+                    'status': (normalized.get('status') or normalized.get('статус') or normalized.get('erp_status_label') or '').strip(),
                     'comment': (normalized.get('comment') or normalized.get('комментарий') or '').strip(),
                     'payload_excerpt': str(row),
                 }

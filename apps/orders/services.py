@@ -112,19 +112,20 @@ def register_order_status_event(
     ext_changed = bool(external_number and external_number != order.external_number)
     status_changed = previous_status != new_status
     changed = status_changed or ext_changed or bool(comment) or bool(raw_status_code) or bool(raw_status_label)
+
     if external_number and ext_changed:
         order.external_number = external_number
         order.erp_document_number = external_number
     if status_changed:
         order.status = new_status
+
     if source == 'erp':
         order.erp_status_code = raw_status_code or new_status
         order.erp_status_label = raw_status_label or new_status
         order.erp_updated_at = timezone.now()
-        if new_status in {'approved', 'processing'} and order.erp_export_state == 'exported':
+        if new_status in {'approved', 'processing', 'invoiced', 'paid', 'overdue', 'shipped', 'completed', 'cancelled'}:
             order.erp_export_state = 'imported'
-        elif new_status in {'invoiced', 'shipped', 'completed', 'cancelled'}:
-            order.erp_export_state = 'imported'
+
     if changed:
         update_fields = []
         for name in ('status', 'external_number', 'erp_document_number', 'erp_status_code', 'erp_status_label', 'erp_updated_at', 'erp_export_state'):

@@ -17,6 +17,8 @@ class Order(models.Model):
         ('approved', 'Подтвержден'),
         ('exported', 'Выгружен в ERP'),
         ('invoiced', 'Выставлен счет'),
+        ('paid', 'Оплачен'),
+        ('overdue', 'Просрочен'),
         ('shipped', 'Отгружен'),
         ('completed', 'Завершен'),
         ('cancelled', 'Отменен'),
