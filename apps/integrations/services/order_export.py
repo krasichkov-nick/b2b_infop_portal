@@ -114,7 +114,17 @@ def export_orders_xml(
         ET.SubElement(doc, _cml('Курс')).text = '1'
         ET.SubElement(doc, _cml('Сумма')).text = f'{order.total:.2f}'
         ET.SubElement(doc, _cml('Время')).text = order.created_at.strftime('%H:%M:%S')
-        ET.SubElement(doc, _cml('Комментарий')).text = order.comment or order.customer_comment or ''
+        comment_parts = [f'external_uid={order.external_uid}']
+
+        customer_comment = (order.customer_comment or '').strip()
+        order_comment = (order.comment or '').strip()
+        manager_comment = (order.manager_comment or '').strip()
+
+        for extra in (customer_comment, order_comment, manager_comment):
+            if extra and extra not in comment_parts:
+                comment_parts.append(extra)
+
+        ET.SubElement(doc, _cml('Комментарий')).text = ' | '.join(comment_parts)
 
         contractors = ET.SubElement(doc, _cml('Контрагенты'))
         contractor = ET.SubElement(contractors, _cml('Контрагент'))

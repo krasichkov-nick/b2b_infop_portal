@@ -17,6 +17,70 @@ class OrderValidationError(Exception):
     pass
 
 
+class InvalidERPStatusTransition(Exception):
+    def __init__(self, previous_status: str, new_status: str):
+        self.previous_status = previous_status
+        self.new_status = new_status
+        super().__init__(f'Недопустимый переход статуса ERP: {previous_status!r} -> {new_status!r}')
+
+
+ERP_STATUS_RANK = {
+    'draft': 0.0,
+    'new': 1.0,
+    'processing': 2.0,
+    'exported': 2.5,
+    'approved': 3.0,
+    'invoiced': 4.0,
+    'paid': 5.0,
+    'overdue': 5.5,
+    'shipped': 6.0,
+    'completed': 7.0,
+    'cancelled': 99.0,
+}
+
+ERP_TERMINAL_STATUSES = {'completed', 'cancelled'}
+ERP_SAME_RANK_ALLOWED = {
+    ('overdue', 'paid'),
+}
+ERP_SPECIAL_ALLOWED = {
+    ('exported', 'approved'),
+    ('exported', 'invoiced'),
+    ('exported', 'paid'),
+    ('exported', 'overdue'),
+    ('exported', 'shipped'),
+    ('exported', 'completed'),
+    ('exported', 'cancelled'),
+}
+
+
+def validate_erp_status_transition(previous_status: str, new_status: str) -> None:
+    previous_status = (previous_status or '').strip()
+    new_status = (new_status or '').strip()
+
+    if not previous_status or not new_status or previous_status == new_status:
+        return
+
+    if previous_status in ERP_TERMINAL_STATUSES and new_status != previous_status:
+        raise InvalidERPStatusTransition(previous_status, new_status)
+
+    if (previous_status, new_status) in ERP_SPECIAL_ALLOWED:
+        return
+
+    previous_rank = ERP_STATUS_RANK.get(previous_status)
+    new_rank = ERP_STATUS_RANK.get(new_status)
+
+    if previous_rank is None or new_rank is None:
+        return
+
+    if new_rank > previous_rank:
+        return
+
+    if new_rank == previous_rank and (previous_status, new_status) in ERP_SAME_RANK_ALLOWED:
+        return
+
+    raise InvalidERPStatusTransition(previous_status, new_status)
+
+
 @dataclass
 class RequestedItem:
     product: Product
@@ -109,6 +173,10 @@ def register_order_status_event(
     notify: bool = True,
 ) -> OrderStatusEvent:
     previous_status = order.status or ''
+
+    if source == 'erp':
+        validate_erp_status_transition(previous_status, new_status)
+
     ext_changed = bool(external_number and external_number != order.external_number)
     status_changed = previous_status != new_status
     changed = status_changed or ext_changed or bool(comment) or bool(raw_status_code) or bool(raw_status_label)

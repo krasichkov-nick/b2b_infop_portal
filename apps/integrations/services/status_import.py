@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from apps.integrations.models import ERPStatusMapping, ExchangeArtifact, ExchangeBatch, ExchangeLog, IntegrationProfile
 from apps.orders.models import Order
-from apps.orders.services import register_order_status_event
+from apps.orders.services import InvalidERPStatusTransition, register_order_status_event
 
 
 def strip_tag(tag: str) -> str:
@@ -30,6 +30,7 @@ class StatusImportStats:
     updated: int = 0
     skipped: int = 0
     unmatched: int = 0
+    invalid_transitions: int = 0
 
 
 class OrderStatusImporter:
@@ -133,18 +134,38 @@ class OrderStatusImporter:
             return
         order.erp_last_payload_ref = self.artifact
         order.save(update_fields=['erp_last_payload_ref'])
-        register_order_status_event(
-            order=order,
-            new_status=normalized_status,
-            source='erp',
-            comment=comment,
-            external_number=external_number,
-            raw_status_code=status,
-            raw_status_label=raw_label,
-            source_file=self.path.name,
-            payload_excerpt=payload_excerpt[:1000],
-            notify=True,
-        )
+        try:
+            register_order_status_event(
+                order=order,
+                new_status=normalized_status,
+                source='erp',
+                comment=comment,
+                external_number=external_number,
+                raw_status_code=status,
+                raw_status_label=raw_label,
+                source_file=self.path.name,
+                payload_excerpt=payload_excerpt[:1000],
+                notify=True,
+            )
+        except InvalidERPStatusTransition as exc:
+            self.stats.invalid_transitions += 1
+            self.stats.skipped += 1
+            order.erp_sync_error = str(exc)
+            order.erp_last_payload_ref = self.artifact
+            order.save(update_fields=['erp_sync_error', 'erp_last_payload_ref'])
+            ExchangeLog.objects.create(
+                profile=self.profile,
+                batch=self.batch,
+                direction='status',
+                source='ERP status feed',
+                file_name=self.path.name,
+                status='warning',
+                message=(
+                    f'Отклонен регрессивный переход: order={order.site_number}, '
+                    f'{exc.previous_status} -> {exc.new_status}, external_uid={order.external_uid}'
+                ),
+            )
+            return
         self.stats.updated += 1
 
     def _collect_csv_records(self):
@@ -224,10 +245,10 @@ class OrderStatusImporter:
             self._apply_record(**record)
         self.batch.orders_count = self.stats.processed
         self.batch.success_count = self.stats.updated
-        self.batch.error_count = self.stats.unmatched
+        self.batch.error_count = self.stats.unmatched + self.stats.invalid_transitions
         self.batch.file_path = str(self.path)
         self.batch.checksum = checksum
-        self.batch.status = 'warning' if self.stats.unmatched else 'ok'
+        self.batch.status = 'warning' if (self.stats.unmatched or self.stats.invalid_transitions) else 'ok'
         self.batch.finished_at = timezone.now()
         self.batch.save(update_fields=['orders_count', 'success_count', 'error_count', 'file_path', 'checksum', 'status', 'finished_at'])
         ExchangeLog.objects.create(
@@ -236,7 +257,11 @@ class OrderStatusImporter:
             direction='status',
             source='ERP status feed',
             file_name=self.path.name,
-            status='warning' if self.stats.unmatched else 'ok',
-            message=f'Обработано={self.stats.processed}, обновлено={self.stats.updated}, пропущено={self.stats.skipped}, без совпадений={self.stats.unmatched}',
+            status='warning' if (self.stats.unmatched or self.stats.invalid_transitions) else 'ok',
+            message=(
+                f'Обработано={self.stats.processed}, обновлено={self.stats.updated}, '
+                f'пропущено={self.stats.skipped}, без совпадений={self.stats.unmatched}, '
+                f'недопустимых переходов={self.stats.invalid_transitions}'
+            ),
         )
         return self.stats
